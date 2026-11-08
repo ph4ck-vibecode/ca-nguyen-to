@@ -1,0 +1,15 @@
+# Ảnh chụp màn hình kiểm thử (nội bộ, không đưa lên repo)
+shots/
+
+# Node / Vercel
+node_modules/
+.vercel/
+
+# Hệ điều hành
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.py[co]

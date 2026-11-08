@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cá Nguyên Tố — Bảng Tuần Hoàn Hóa Học</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --steel:#aab4c0;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #10314d 0%, transparent 60%),
+      radial-gradient(900px 500px at 80% 110%, #0b2a44 0%, transparent 55%),
+      linear-gradient(180deg,#071018 0%,#091b2b 55%,#081226 100%);
+    color:#dbe7f3;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .glass{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(173,216,255,.14);
+    backdrop-filter:blur(8px);
+  }
+  /* ============ STAGE ============ */
+  #stagebox{width:100%; position:relative;}
+  #scaler{
+    width:1200px; height:640px;
+    transform-origin:top left;
+    position:relative;
+    margin:0 auto;
+  }
+  #bubbles{position:absolute; inset:0; pointer-events:none; z-index:1;}
+  .bubble{
+    position:absolute; bottom:-30px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(220,245,255,.55), rgba(150,210,255,.12) 65%, transparent);
+    border:1px solid rgba(190,230,255,.25);
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) translateX(0); opacity:0;}
+    10%{opacity:.8;}
+    90%{opacity:.6;}
+    100%{transform:translateY(-660px) translateX(24px); opacity:0;}
+  }
+  #fish{position:absolute; inset:0; z-index:2; animation:bob 7s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-13px) rotate(.35deg);}}
+  #silhouette{position:absolute; inset:0; pointer-events:none;}
+
+  /* ============ ELEMENT CARDS ============ */
+  .card{
+    position:absolute;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:8px;
+    color:#fff; cursor:pointer; user-select:none;
+    box-shadow:0 3px 8px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.22);
+    transform:rotate(var(--r,0deg));
+    transition:transform .16s ease, box-shadow .16s ease, opacity .25s ease, filter .2s;
+    z-index:5;
+  }
+  .card .num{position:absolute; top:2px; left:6px; font-size:7px; font-weight:700; opacity:.92; letter-spacing:.2px;}
+  .card .sym{font-weight:800; letter-spacing:.3px;}
+  .card .wt{position:absolute; bottom:2.5px; font-size:6.5px; font-weight:500; opacity:.8; letter-spacing:.2px;}
+
+  /* honeycomb tiles for the head/snout */
+  .hexy{
+    clip-path:polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%);
+    border-radius:0;
+    box-shadow:none;
+  }
+  .hexy .num{left:19%; top:4%;}
+  .hexy .wt{bottom:5%;}
+
+  .row1{
+    background:linear-gradient(160deg,#4db4ff 0%, #1f7fe0 60%, #1668c9 100%);
+    text-shadow:0 1px 2px rgba(0,20,40,.5);
+  }
+  .row2{background:linear-gradient(160deg,#3d96dd 0%, #2170bd 60%, #1a5ba3 100%);}
+  .row3{background:linear-gradient(160deg,#4a658c 0%, #35507a 55%, #263d61 100%);}
+  .row4{background:linear-gradient(160deg,#2b425f 0%, #1c2e47 55%, #121e30 100%);}
+
+  .dorsal{background:linear-gradient(160deg,#63dbe9 0%, #2ba8c1 65%, #1d87a0 100%);}
+  .ventral{background:linear-gradient(160deg,#7f8ea6 0%, #57677f 60%, #3d4a5e 100%);}
+  .ventral-lg{background:linear-gradient(160deg,#5d6e88 0%, #41506a 60%, #2b374b 100%);}
+
+  .lan{background:linear-gradient(160deg,#40cdbb 0%, #26b0a4 60%, #177f7c 100%);}
+  .act{background:linear-gradient(160deg,#8f7ff2 0%, #6a58cf 60%, #4a3fa2 100%);}
+
+  .light-tile text, .card.dark-text{color:#20293a; text-shadow:none;}
+
+  .mark-lan{
+    background:rgba(53,194,183,.10);
+    border:2px dashed #4fd8c8;
+    color:#8ff0e2;
+    box-shadow:inset 0 0 12px rgba(53,194,183,.2);
+  }
+  .mark-act{
+    background:rgba(122,100,230,.10);
+    border:2px dashed #9d8cf5;
+    color:#c8bcfa;
+    box-shadow:inset 0 0 12px rgba(122,100,230,.25);
+  }
+  .mark-lan .sym,.mark-act .sym{font-size:22px; line-height:1;}
+
+  /* hover / focus behaviour */
+  #fish.focus .card{opacity:.22; filter:saturate(.4);}
+  #fish.focus .card.glow{opacity:1; filter:none; box-shadow:0 0 18px 3px rgba(120,220,255,.55), 0 3px 10px rgba(0,0,0,.5);}
+  #fish.dimmed .card:not(:hover){opacity:.38;}
+  .card:hover{
+    transform:rotate(var(--r,0deg)) scale(1.3);
+    z-index:60;
+    box-shadow:0 0 20px 4px rgba(140,215,255,.6), 0 6px 14px rgba(0,0,0,.55);
+    opacity:1 !important;
+    filter:brightness(1.15) saturate(1.2);
+  }
+
+  /* eye decoration */
+  #eye{
+    position:absolute; left:101px; top:251px; width:27px; height:27px; border-radius:50%;
+    background:radial-gradient(circle at 35% 32%, #ffffff 0%, #d9ecff 45%, #9dc4e8 100%);
+    box-shadow:0 0 8px rgba(180,230,255,.8), inset 0 -2px 4px rgba(20,40,60,.35);
+    z-index:40; cursor:pointer;
+    animation:look 9s ease-in-out infinite;
+  }
+  /* speech bubble (easter egg — click the eye) */
+  #speech{
+    position:absolute; left:126px; top:200px; max-width:230px;
+    padding:9px 13px; border-radius:14px;
+    background:rgba(255,255,255,.95); color:#16283d;
+    font-size:11.5px; font-weight:600; line-height:1.45;
+    box-shadow:0 8px 22px rgba(0,10,25,.5);
+    opacity:0; transform:translateY(8px) scale(.85);
+    transform-origin:bottom left;
+    transition:opacity .22s ease, transform .22s ease;
+    z-index:80; pointer-events:none;
+  }
+  #speech::after{
+    content:""; position:absolute; left:12px; bottom:-8px;
+    border:8px solid transparent; border-top-color:rgba(255,255,255,.95); border-bottom:0;
+  }
+  #speech.show{opacity:1; transform:translateY(0) scale(1);}
+  #eye::after{ /* pupil */
+    content:""; position:absolute; width:11px; height:11px; left:13px; top:7px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #4a6c8c 0%, #101c28 70%);
+  }
+  #eye::before{ /* glint */
+    content:""; position:absolute; width:3.5px; height:3.5px; left:8px; top:6px;
+    border-radius:50%; background:#fff;
+  }
+  @keyframes look{0%,70%,100%{transform:translate(0,0);} 80%{transform:translate(2px,1.5px);} 90%{transform:translate(-1.5px,1.5px);}}
+
+  /* tooltip */
+  #tip{
+    position:fixed; z-index:999; pointer-events:none;
+    min-width:172px; max-width:240px;
+    padding:9px 12px 10px;
+    border-radius:10px;
+    background:linear-gradient(160deg, rgba(14,32,50,.96), rgba(18,44,66,.96));
+    border:1px solid rgba(150,215,255,.45);
+    box-shadow:0 10px 30px rgba(0,10,25,.65);
+    font-size:12.5px; line-height:1.5;
+    opacity:0; transform:translateY(6px);
+    transition:opacity .14s ease, transform .14s ease;
+  }
+  #tip.on{opacity:1; transform:translateY(0);}
+  #tip .t-zone{font-size:9.5px; letter-spacing:1.4px; text-transform:uppercase; color:#7fd4ff; font-weight:700;}
+  #tip .t-sym{font-size:19px; font-weight:800; color:#fff;}
+  #tip .t-row{display:flex; justify-content:space-between; gap:14px; color:#c9dcec;}
+  #tip .t-row b{color:#fff;}
+  #tip .t-desc{margin-top:5px; font-size:10.8px; color:#8fb4cf; border-top:1px solid rgba(150,215,255,.18); padding-top:5px;}
+
+  .chip{display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:3px 10px; border-radius:999px; border:1px solid rgba(160,215,255,.25); background:rgba(255,255,255,.05);}
+  .dot{width:9px; height:9px; border-radius:3px; display:inline-block;}
+</style>
+</head>
+<body class="antialiased">
+
+<header class="max-w-6xl mx-auto px-5 pt-7 pb-3 flex flex-wrap items-center gap-4 justify-between">
+  <div>
+    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">🐟 Cá Nguyên Tố — <span class="text-sky-400">Bảng Tuần Hoàn Hóa Học</span></h1>
+    <p class="text-[11.5px] text-sky-200/70 mt-0.5">Toàn bộ bảng tuần hoàn được tạc nên hình một chú cá · đầu &amp; mõm · vây lưng · vây bụng · đuôi quạt lantan–actini</p>
+  </div>
+  <div class="flex flex-wrap gap-1.5 text-slate-200/90">
+    <span class="chip"><span class="dot" style="background:#aab4c0"></span>Đầu &amp; Mõm (1–18)</span>
+    <span class="chip"><span class="dot" style="background:#2f8fd6"></span>Thân Chính (19–112)</span>
+    <span class="chip"><span class="dot" style="background:#63dbe9"></span>Vây Lưng (31–36)</span>
+    <span class="chip"><span class="dot" style="background:#7f8ea6"></span>Vây Dưới (81–86 · 113–118)</span>
+    <span class="chip"><span class="dot" style="background:#40cdbb"></span>Đuôi Ln (57–71)</span>
+    <span class="chip"><span class="dot" style="background:#8f7ff2"></span>Đuôi An (89–103)</span>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 pb-10">
+  <div id="stagebox" class="glass rounded-2xl overflow-hidden">
+    <div id="scaler">
+      <div id="bubbles"></div>
+      <div id="fish">
+        <!-- backdrop silhouette -->
+        <svg id="silhouette" viewBox="0 0 1200 640" fill="none">
+          <ellipse cx="140" cy="282" rx="112" ry="96" fill="#bfe6ff" opacity=".06"/>
+          <rect x="228" y="180" width="596" height="212" rx="70" fill="#bfe6ff" opacity=".06"/>
+          <polygon points="296,196 348,58 400,196" fill="#bfe6ff" opacity=".05"/>
+          <polygon points="590,196 644,58 698,196" fill="#bfe6ff" opacity=".05"/>
+          <polygon points="248,376 302,514 356,376" fill="#bfe6ff" opacity=".05"/>
+          <polygon points="486,376 540,514 594,376" fill="#bfe6ff" opacity=".05"/>
+          <path d="M806,180 L1130,55 L1155,480 L806,452 Z" fill="#bfe6ff" opacity=".05"/>
+        </svg>
+        <!-- eye -->
+        <div id="eye" title="Bấm vào mắt cá nhé!"></div>
+        <div id="speech">Bloop!</div>
+        <!-- all element cards are injected here by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- inspector / legend -->
+  <div class="grid sm:grid-cols-3 gap-3 mt-4">
+    <div id="inspector" class="glass rounded-xl px-4 py-3 sm:col-span-2">
+      <p class="text-[10px] tracking-[.2em] uppercase text-sky-300/80 font-bold">Bảng tra cứu</p>
+      <p id="inspectText" class="text-sm text-sky-100/90 mt-1">Di chuột lên ô nguyên tố để xem tên đầy đủ, số hiệu và khối lượng nguyên tử. <b>Bấm vào ô nguyên tố</b> để khóa thông tin chi tiết ngay tại đây — bấm ra khoảng trống (hoặc phím Esc) để thoát. Nhấp vào ô đánh dấu <b class="text-teal-300">*</b> / <b class="text-violet-300">**</b> trên thân cá để tô sáng toàn bộ thùy lantan / actini của đuôi.</p>
+    </div>
+    <div class="glass rounded-xl px-4 py-3">
+      <p class="text-[10px] tracking-[.2em] uppercase text-sky-300/80 font-bold">Thống kê mô hình</p>
+      <ul class="text-[12px] text-sky-100/85 mt-1 space-y-0.5">
+        <li>Nguyên tố đã xếp: <b>118 / 118</b></li>
+        <li>Ô đầu dạng tổ ong: <b>18</b> · Ô quạt đuôi: <b>30</b></li>
+        <li>Số vùng cơ thể: <b>9</b> · Mọi ô đều tương tác được</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<div id="tip"></div>
+
+<script>
+/* ================= ELEMENT DATA (symbol, full name, atomic weight) ================= */
+const EL = [
+["H","Hydrogen","1.008"],["He","Helium","4.003"],["Li","Lithium","6.94"],["Be","Beryllium","9.012"],
+["B","Boron","10.81"],["C","Carbon","12.011"],["N","Nitrogen","14.007"],["O","Oxygen","15.999"],
+["F","Fluorine","18.998"],["Ne","Neon","20.180"],["Na","Sodium","22.990"],["Mg","Magnesium","24.305"],
+["Al","Aluminium","26.982"],["Si","Silicon","28.085"],["P","Phosphorus","30.974"],["S","Sulfur","32.06"],
+["Cl","Chlorine","35.45"],["Ar","Argon","39.948"],["K","Potassium","39.098"],["Ca","Calcium","40.078"],
+["Sc","Scandium","44.956"],["Ti","Titanium","47.867"],["V","Vanadium","50.942"],["Cr","Chromium","51.996"],
+["Mn","Manganese","54.938"],["Fe","Iron","55.845"],["Co","Cobalt","58.933"],["Ni","Nickel","58.693"],
+["Cu","Copper","63.546"],["Zn","Zinc","65.38"],["Ga","Gallium","69.723"],["Ge","Germanium","72.630"],
+["As","Arsenic","74.922"],["Se","Selenium","78.971"],["Br","Bromine","79.904"],["Kr","Krypton","83.798"],
+["Rb","Rubidium","85.468"],["Sr","Strontium","87.62"],["Y","Yttrium","88.906"],["Zr","Zirconium","91.224"],
+["Nb","Niobium","92.906"],["Mo","Molybdenum","95.95"],["Tc","Technetium","(98)"],["Ru","Ruthenium","101.07"],
+["Rh","Rhodium","102.91"],["Pd","Palladium","106.42"],["Ag","Silver","107.87"],["Cd","Cadmium","112.41"],
+["In","Indium","114.82"],["Sn","Tin","118.71"],["Sb","Antimony","121.76"],["Te","Tellurium","127.60"],
+["I","Iodine","126.90"],["Xe","Xenon","131.29"],["Cs","Cesium","132.91"],["Ba","Barium","137.33"],
+["La","Lanthanum","138.91"],["Ce","Cerium","140.12"],["Pr","Praseodymium","140.91"],["Nd","Neodymium","144.24"],
+["Pm","Promethium","(145)"],["Sm","Samarium","150.36"],["Eu","Europium","151.96"],["Gd","Gadolinium","157.25"],
+["Tb","Terbium","158.93"],["Dy","Dysprosium","162.50"],["Ho","Holmium","164.93"],["Er","Erbium","167.26"],
+["Tm","Thulium","168.93"],["Yb","Ytterbium","173.05"],["Lu","Lutetium","174.97"],["Hf","Hafnium","178.49"],
+["Ta","Tantalum","180.95"],["W","Tungsten","183.84"],["Re","Rhenium","186.21"],["Os","Osmium","190.23"],
+["Ir","Iridium","192.22"],["Pt","Platinum","195.08"],["Au","Gold","196.97"],["Hg","Mercury","200.59"],
+["Tl","Thallium","204.38"],["Pb","Lead","207.2"],["Bi","Bismuth","208.98"],["Po","Polonium","(209)"],
+["At","Astatine","(210)"],["Rn","Radon","(222)"],["Fr","Francium","(223)"],["Ra","Radium","(226)"],
+["Ac","Actinium","227"],["Th","Thorium","232.04"],["Pa","Protactinium","231.04"],["U","Uranium","238.03"],
+["Np","Neptunium","(237)"],["Pu","Plutonium","(244)"],["Am","Americium","(243)"],["Cm","Curium","(247)"],
+["Bk","Berkelium","(247)"],["Cf","Californium","(251)"],["Es","Einsteinium","(252)"],["Fm","Fermium","(257)"],
+["Md","Mendelevium","(258)"],["No","Nobelium","(259)"],["Lr","Lawrencium","(266)"],["Rf","Rutherfordium","(267)"],
+["Db","Dubnium","(268)"],["Sg","Seaborgium","(269)"],["Bh","Bohrium","(270)"],["Hs","Hassium","(269)"],
+["Mt","Meitnerium","(278)"],["Ds","Darmstadtium","(281)"],["Rg","Roentgenium","(282)"],["Cn","Copernicium","(285)"],
+["Nh","Nihonium","(286)"],["Fl","Flerovium","(289)"],["Mc","Moscovium","(290)"],["Lv","Livermorium","(293)"],
+["Ts","Tennessine","(294)"],["Og","Oganesson","(294)"]
+];
+const DATA = {}; EL.forEach((e,i)=>DATA[e[0]] = {n:i+1, name:e[1], wt:e[2]});
+
+/* ================= ZONE METADATA ================= */
+const META = {
+  head:       ["Vùng Đầu & Mõm","Phần đầu tròn dạng tổ ong — phi kim & các nguyên tố nhẹ"],
+  "body-r1":  ["Thân Chính · Hàng 1","Dải kim loại chuyển tiếp màu xanh tươi phía trên"],
+  "body-r2":  ["Thân Chính · Hàng 2","Hàng chuyển tiếp ở nửa trên thân cá"],
+  "body-r3":  ["Thân Chính · Hàng 3","Kim loại chuyển tiếp nặng — sống lưng xám xanh"],
+  "body-r4":  ["Vùng Bụng · Hàng 4","Hàng dưới cùng — nguyên tố siêu nặng màu navy sậm"],
+  "dorsal1":  ["Vây Lưng Thứ Nhất","Vây hình chóp tam giác trên lưng (Ga–Kr)"],
+  "dorsal2":  ["Vây Lưng Thứ Hai","Vây nhỏ phía sau, sát gốc đuôi"],
+  "ventral1": ["Vây Bụng (Trước)","Vây dưới hướng thẳng xuống ở phía trước thân"],
+  "ventral2": ["Vây Hậu Môn (Cuối)","Vây tam giác lớn hướng xuống phía sau thân"],
+  "tail-lan": ["Đuôi Quạt · Lantan","Thùy quạt trên của dãy nội chuyển tiếp (57–71)"],
+  "tail-act": ["Đuôi Quạt · Actini","Thùy quạt dưới của dãy nội chuyển tiếp (89–103)"],
+  "mark":     ["Ô Đánh Dấu Chuỗi","Bấm để tô sáng thùy đuôi tương ứng"]
+};
+
+/* ================= COORDINATE MATRIX =================
+   Canvas: 1200 x 640. Fish faces LEFT (head left, tail right). */
+const SIZES = { w40:[40,40], sm:[30,30], body:[44,44], tail:[42,42] };
+const HEADCOLS = ["#d6dee7","#b6c2cf","#9aa9ba","#7c8ba0","#5d6c80","#46525f","#343e49"];
+
+const ZONES = [
+ /* ---------- 1. HEAD & SNOUT (hexagonal silver tiles) ---------- */
+ {key:"head", type:"tile", cards:[
+   // Row 1 — top edge / snout
+   ["H",62,198],["He",106,198],["Li",150,198],["Be",194,198],
+   // Row 2
+   ["B",50,244],["C",94,244],["N",138,244],["O",182,244],
+   // Row 3
+   ["F",58,290],["Ne",102,290],["Na",146,290],["Mg",190,290],
+   // Row 4 — jaw ridge (small tiles)
+   ["Al",36,336,0,"sm"],["Si",70,336,0,"sm"],["P",104,336,0,"sm"],
+   ["S",138,336,0,"sm"],["Cl",172,336,0,"sm"],["Ar",206,336,0,"sm"]
+ ]},
+
+ /* ---------- 2. MAIN BODY 4 x 12 ---------- */
+ {key:"body-r1", type:"body", y:190, cards:["K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn"]},
+ {key:"body-r2", type:"body", y:238, cards:["Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd"]},
+ {key:"body-r3", type:"body", y:286, cards:["Cs","Ba","@lan","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg"]},
+ {key:"body-r4", type:"body", y:334, cards:["Fr","Ra","@act","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn"]},
+
+ /* ---------- 3a. FIRST DORSAL FIN — triangular pyramid ---------- */
+ {key:"dorsal1", type:"fin", cards:[
+   ["Ga",302,146],["Ge",346,146],["As",390,146],
+   ["Se",324,104],["Br",368,104],
+   ["Kr",346,62,-6]
+ ]},
+ /* ---------- 3b. SECOND DORSAL FIN ---------- */
+ {key:"dorsal2", type:"fin", cards:[
+   ["In",596,146],["Sn",640,146],["Sb",684,146],
+   ["Te",618,104],["I",662,104],
+   ["Xe",640,62,-6]
+ ]},
+
+ /* ---------- 4a. FRONT VENTRAL FIN ---------- */
+ {key:"ventral1", type:"fin", cards:[
+   ["Tl",254,382],["Pb",298,382],["Bi",342,382],
+   ["Po",276,426],["At",320,426],
+   ["Rn",298,470,6]
+ ]},
+ /* ---------- 4b. LARGE REAR ANAL FIN ---------- */
+ {key:"ventral2", type:"fin", cards:[
+   ["Nh",492,382],["Fl",536,382],["Mc",580,382],
+   ["Ts",514,426],["Lv",558,426],
+   ["Og",536,470,6]
+ ]},
+
+ /* ---------- 5. TAIL FAN (inner transition series) ---------- */
+ // Joint column fanned out into two lobes: lanthanides sweep up, actinides sweep down
+ {key:"joint", cards:[
+   ["La",822,190,0],  ["Ac",822,238,0], ["Ce",822,286,0],
+   ["Th",822,334,0],  ["Pr",822,382,0], ["Pa",822,430,0]
+ ]},
+ {key:"tail-lan", cards:[
+   ["Nd",870,130,-3],["Pm",870,178,-3],["Sm",870,226,-3],
+   ["Eu",918,112,-6],["Gd",918,160,-6],["Tb",918,208,-6],
+   ["Dy",966,96,-9],["Ho",966,144,-9],
+   ["Er",1014,84,-12],["Tm",1014,132,-12],
+   ["Yb",1062,76,-14],
+   ["Lu",1110,70,-16]
+ ]},
+ {key:"tail-act", cards:[
+   ["U",870,346,3],["Np",870,394,3],["Pu",870,442,3],
+   ["Am",918,364,6],["Cm",918,412,6],["Bk",918,460,6],
+   ["Cf",966,380,9],["Es",966,428,9],
+   ["Fm",1014,390,12],["Md",1014,438,12],
+   ["No",1062,400,14],
+   ["Lr",1110,406,16]
+ ]}
+];
+
+/* ================= RENDER ================= */
+const SEG = {"-6":"-6deg","-3":"-3deg","3":"3deg","6":"6deg","-9":"-9deg","9":"9deg","-12":"-12deg","12":"12deg","-14":"-14deg","14":"14deg","-16":"-16deg","16":"16deg"};
+const BODY_X0 = 238, BODY_STEP = 48;
+
+function cssVarRot(r){ return r ? `--r:${r}deg;` : ""; }
+
+function makeCard(sym, x, y, w, h, rot, cls, zoneKey){
+  const d = DATA[sym];
+  const el = document.createElement("div");
+  el.className = "card " + cls;
+  const num = d ? d.n : "";
+  const wt  = d ? d.wt : "";
+  el.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;${cssVarRot(rot)}`;
+  el.dataset.zone = zoneKey;
+  el.dataset.sym  = sym;
+  let dark = false;
+  if(cls.includes("tile")){
+    el.style.background = `linear-gradient(160deg, ${HEADCOLS[(num*3)%HEADCOLS.length]}, ${HEADCOLS[(num*5+2)%HEADCOLS.length]})`;
+    if(HEADCOLS.indexOf(HEADCOLS[(num*3)%HEADCOLS.length]) < 2) dark = true;
+  }
+  if(dark) el.classList.add("dark-text");
+  el.innerHTML = `
+    <span class="num">${num}</span>
+    <span class="sym" style="font-size:${w>=42?15:w>=40?13.5:w>=30?10.5:13}px">${sym}</span>
+    ${w>=42?`<span class="wt">${wt}</span>`:""}`;
+  return el;
+}
+
+const fish = document.getElementById("fish");
+
+ZONES.forEach(z=>{
+  const isBody = z.type==="body";
+  const isFin  = z.type==="fin";
+  if(z.key==="joint"){
+    // joint column belongs visually to both lobes
+    z.cards.forEach(([sym,x,y,r])=>{
+      const cls = (DATA[sym].n <= 71) ? "tail lan" : "tail act";
+      // fan lobe key for marker spotlight
+      const lobe = DATA[sym].n <= 71 ? "tail-lan" : "tail-act";
+      const c = makeCard(sym,x,y,42,42,r,cls,lobe);
+      if(lobe==="tail-lan") c.classList.add("ln"); else c.classList.add("an");
+      fish.appendChild(c);
+    });
+    return;
+  }
+  if(z.type==="tile"){
+    z.cards.forEach(c=>{
+      const [sym,x,y,r,sz] = c;
+      const [w,h] = (sz&&SIZES[sz]) ? SIZES[sz] : SIZES.w40;
+      const card = makeCard(sym,x,y,w,h,r||0, hexCls(sym), z.key);
+      card.classList.add("tile","hexy");
+      fish.appendChild(card);
+    });
+    return;
+  }
+  if(isBody){
+    z.cards.forEach((sym,i)=>{
+      const x = BODY_X0 + i*BODY_STEP;
+      if(sym.startsWith("@")){
+        const mk = document.createElement("div");
+        const act = sym==="@act";
+        mk.className = "card " + (act?"mark-act":"mark-lan");
+        mk.style.cssText = `left:${x}px;top:${z.y}px;width:44px;height:44px;`;
+        mk.dataset.zone = "mark";
+        mk.dataset.lobe = act ? "tail-act" : "tail-lan";
+        mk.innerHTML = `<span class="num">${act?"89–103":"57–71"}</span>
+                        <span class="sym">${act?"**":"*"}</span>`;
+        fish.appendChild(mk);
+        return;
+      }
+      fish.appendChild(makeCard(sym,x,z.y,44,44,0,`row${z.key.slice(-1)}`,z.key));
+    });
+    return;
+  }
+  // fins & tail lobes: [sym,x,y,(rot)]
+  const cls = z.type==="fin" ? (z.key==="ventral2"?"ventral ventral-lg": z.key==="ventral1"?"ventral":"dorsal")
+            : z.key==="tail-lan" ? "tail lan" : "tail act";
+  z.cards.forEach(([sym,x,y,r])=>{
+    const c = makeCard(sym,x,y, z.type==="fin"?40:42, z.type==="fin"?40:42, r||0, cls, z.key);
+    if(z.key==="tail-lan") c.classList.add("ln");
+    if(z.key==="tail-act") c.classList.add("an");
+    fish.appendChild(c);
+  });
+});
+
+function hexCls(){ return "tile"; }
+
+/* ================= TOOLTIP + INTERACTIVITY ================= */
+const fishEl = fish; // always defined
+const tip = document.getElementById("tip");
+const inspectText = document.getElementById("inspectText");
+let pinnedLobe = null;
+
+function zoneMeta(card){
+  const zk = card.dataset.zone;
+  const [name,desc] = META[zk] || META.mark;
+  return {name,desc};
+}
+
+function showTip(card,e){
+  const sym = card.dataset.sym;
+  if(sym){ // element card
+    const d = DATA[sym];
+    const {name:zn,desc} = zoneMeta(card);
+    tip.innerHTML = `
+      <div class="t-zone">${zn}</div>
+      <div class="t-sym">${sym} <span style="font-size:12px;font-weight:600;color:#bfe0f5;">· ${d.name}</span></div>
+      <div class="t-row"><span>Số hiệu <b>${d.n}</b></span><span>Khối lượng <b>${d.wt} u</b></span></div>
+      <div class="t-desc">${desc} — <b>bấm</b> để xem chi tiết &amp; khóa tại đây</div>`;
+  } else {  // marker card
+    const lobe = card.dataset.lobe === "tail-act" ? "Actini (89–103)" : "Lantan (57–71)";
+    const {desc} = zoneMeta(card);
+    tip.innerHTML = `
+      <div class="t-zone">${META.mark[0]}</div>
+      <div class="t-sym">${card.dataset.lobe==="tail-act"?"**":"*"}</div>
+      <div class="t-row"><span>Chuỗi <b>${lobe}</b></span></div>
+      <div class="t-desc">${META[card.dataset.lobe][1]} — ${desc}</div>`;
+  }
+  positionTip(e);
+  tip.classList.add("on");
+}
+
+function positionTip(e){
+  const pad = 16, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if(x + tw > innerWidth  - 8) x = e.clientX - tw - pad;
+  if(y + th > innerHeight - 8) y = e.clientY - th - pad;
+  tip.style.left = x + "px";
+  tip.style.top  = y + "px";
+}
+
+function spotlight(lobe, on){
+  fishEl.classList.toggle("focus", on);
+  fish.querySelectorAll(".card").forEach(c=>c.classList.remove("glow"));
+  if(!on) return;
+  const target = lobe || null;
+  fishEl.querySelectorAll(".card").forEach(c=>{
+    if(target && (c.dataset.zone===target || c.classList.contains(target==="tail-lan"?"ln":"an")))
+      c.classList.add("glow");
+  });
+}
+
+fish.addEventListener("mouseover", e=>{
+  const card = e.target.closest(".card");
+  if(!card || pinnedLobe) return;
+  fishEl.classList.add("dimmed");
+  const sym = card.dataset.sym;
+  if(sym){
+    fishEl.classList.remove("focus");
+    fishEl.querySelectorAll(".card").forEach(c=>c.classList.remove("glow"));
+  } else {
+    spotlight(card.dataset.lobe, true);
+  }
+  showTip(card,e);
+});
+
+fish.addEventListener("mousemove", e=>{ if(tip.classList.contains("on")) positionTip(e); });
+
+fish.addEventListener("mouseout", e=>{
+  const card = e.target.closest(".card");
+  if(!card) return;
+  if(!card.contains(e.relatedTarget)){
+    tip.classList.remove("on");
+    fishEl.classList.remove("dimmed");
+    if(!pinnedLobe) spotlight(null,false);
+  }
+});
+
+/* ---- Xếp loại & chu kỳ (thông tin cơ bản khi bấm ô nguyên tố) ---- */
+function periodOf(n){ return n<=2?1: n<=10?2: n<=18?3: n<=36?4: n<=54?5: n<=86?6:7; }
+function categoryOf(n){
+  if(n>=57&&n<=71)  return "Kim loại nội chuyển tiếp — Lantan (khối f)";
+  if(n>=89&&n<=103) return "Kim loại nội chuyển tiếp — Actini (khối f)";
+  if([3,11,19,37,55,87].includes(n)) return "Kim loại kiềm (khối s)";
+  if([4,12,20,38,56,88].includes(n)) return "Kim loại kiềm thổ (khối s)";
+  if([2,10,18,36,54,86,118].includes(n)) return "Khí hiếm (khối p)";
+  if([9,17,35,53,85,117].includes(n)) return "Halogen (khối p)";
+  if([5,14,32,33,51,52].includes(n)) return "Án kim loại (khối p)";
+  if([1,6,7,8,15,16,34].includes(n)) return "Phi kim (khối p)";
+  if([13,49,50,81,82,83].includes(n)) return "Kim loại sau chuyển tiếp (khối p)";
+  if((n>=21&&n<=30)||(n>=39&&n<=48)||(n>=72&&n<=80)||(n>=104&&n<=112)) return "Kim loại chuyển tiếp (khối d)";
+  return "Khác";
+}
+
+fish.addEventListener("click", e=>{
+  const card = e.target.closest(".card");
+  if(!card){                       // bấm khoảng trống → thoát mọi khóa
+    clearAll(); return;
+  }
+  if(!card.dataset.sym){           // ô đánh dấu * / **
+    const lobe = card.dataset.lobe;
+    if(pinnedLobe === lobe){ clearAll(); }
+    else{
+      pinnedLobe = lobe; spotlight(lobe,true);
+      inspectText.innerHTML =
+        `<b style="color:${lobe==="tail-act"?"#c8bcfa":"#8ff0e2"}">Đã khóa tô sáng thùy ${lobe==="tail-act"?"actini":"lantan"} của đuôi</b> — bấm lại ô đánh dấu hoặc bấm ra khoảng trống để mở khóa.`;
+    }
+    return;
+  }
+  /* ===== BẤM Ô NGUYÊN TỐ: hiện bảng thông tin cơ bản ===== */
+  const sym = card.dataset.sym, d = DATA[sym];
+  const {name:zn, desc} = zoneMeta(card);
+  const st = getComputedStyle(card);
+  inspectText.innerHTML = `
+    <div class="mt-1 flex items-start gap-3">
+      <div style="width:56px;height:56px;min-width:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+                  font-weight:800;font-size:19px;box-shadow:0 3px 8px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.25);
+                  background:${st.backgroundImage || st.backgroundColor};color:${st.color};">
+        ${sym}
+      </div>
+      <div class="text-[12.5px] leading-relaxed text-sky-100/90">
+        <b style="color:#fff;font-size:15px">${d.name}</b> <span style="color:#9cc4dc">(${sym})</span><br>
+        Số hiệu nguyên tử: <b>${d.n}</b> · Chu kỳ <b>${periodOf(d.n)}</b><br>
+        Khối lượng nguyên tử: <b>${d.wt} u</b><br>
+        Phân loại: <b>${categoryOf(d.n)}</b><br>
+        <span style="color:#8fb4cf">Vị trí trên mô hình: <b>${zn}</b> — ${desc}</span>
+      </div>
+    </div>`;
+});
+
+function clearAll(){
+  pinnedLobe = null; spotlight(null,false);
+  inspectText.innerHTML = DEFAULT_INSPECT;
+}
+const DEFAULT_INSPECT = inspectText.innerHTML;
+
+document.addEventListener("keydown", ev=>{
+  if(ev.key==="Escape") clearAll();
+});
+
+/* ================= BUBBLES ================= */
+const box = document.getElementById("bubbles");
+[[0.04,14,9],[0.09,9,12],[0.16,18,10],[0.23,7,15],[0.79,12,11],[0.86,8,14],[0.92,15,9],[0.6,6,16],[0.34,10,13]]
+.forEach(([fx,s,dur],i)=>{
+  const b = document.createElement("div");
+  b.className = "bubble";
+  b.style.cssText = `left:${fx*100}%;width:${s}px;height:${s}px;animation-duration:${dur}s;animation-delay:${-i*1.7}s;`;
+  box.appendChild(b);
+});
+
+/* ================= EASTER EGG — mắt cá biết nói ================= */
+const speech = document.getElementById("speech");
+const SPEECHES = [
+  "Bloop! Mình được ghép từ cả 118 nguyên tố đấy!",
+  "H là nhẹ nhất, còn Og là nặng nhất trong nhóm mình đó!",
+  "Cái đuôi quạt kia? 30 nguyên tố nội chuyển tiếp lận!",
+  "Bấm vào bất kỳ ô nào để xem thông tin của nó nhé!",
+  "Ô * và ** trên thân mình là chìa khóa mở khóa đuôi!",
+  "Chúc bạn học tốt — hóa học vui lắm nha! 🐟"
+];
+let speechTimer;
+document.getElementById("eye").addEventListener("click", ()=>{
+  speech.textContent = SPEECHES[Math.floor(Math.random()*SPEECHES.length)];
+  speech.classList.add("show");
+  clearTimeout(speechTimer);
+  speechTimer = setTimeout(()=>speech.classList.remove("show"), 2800);
+});
+
+/* ================= RESPONSIVE SCALE ================= */
+const stagebox = document.getElementById("stagebox");
+const scaler = document.getElementById("scaler");
+function fit(){
+  const s = Math.min(1, stagebox.clientWidth / 1200);
+  scaler.style.transform = `scale(${s})`;
+  scaler.parentElement.style.height = (640*s) + "px";
+  scaler.style.position = "absolute";
+}
+window.addEventListener("resize", fit);
+fit();
+</script>
+</body>
+</html>
