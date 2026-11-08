@@ -31,12 +31,13 @@ def main():
     if not m:
         return finish()
 
-    entries = re.findall(r'\["(\w{1,3})","([^"]+)","([^"]+)"\]', m.group(1))
+    entries = re.findall(r'\["(\w{1,3})","([^"]+)","([^"]+)","([^"]+)"\]', m.group(1))
     symbols = [e[0] for e in entries]
 
     check("Đủ 118 nguyên tố", len(entries) == 118, f"thấy {len(entries)}")
     check("Không có ký hiệu trùng lặp", len(set(symbols)) == len(symbols))
-    check("Không có tên trùng lặp", len({e[1] for e in entries}) == len(entries))
+    check("Không có tên trùng lặp", len({e[2] for e in entries}) == len(entries))
+    check("Mọi nguyên tố có tên tiếng Việt", len({e[2] for e in entries}) == 118 and "Hiđrô" in {e[2] for e in entries})
 
     # ký hiệu phải bắt đầu bằng chữ in hoa
     check("Mọi ký hiệu đúng quy cách", all(re.fullmatch(r"[A-Z][a-z]?", s) for s in symbols))
