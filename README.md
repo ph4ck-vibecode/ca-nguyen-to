@@ -1,6 +1,6 @@
 # 🐟 Cá Nguyên Tố — Bảng Tuần Hoàn Hóa Học
 
-Một trang web **một tệp duy nhất** (`element-fish.html`): toàn bộ **118 nguyên tố hóa học** được tạc nên hình một chú cá, đúng vị trí giải phẫu:
+Một trang web **một tệp duy nhất** (`index.html`): toàn bộ **118 nguyên tố hóa học** được tạc nên hình một chú cá, đúng vị trí giải phẫu:
 
 | Vùng trên cá | Nguyên tố | Phong cách |
 |---|---|---|
@@ -29,8 +29,8 @@ Một trang web **một tệp duy nhất** (`element-fish.html`): toàn bộ **1
 Không cần cài gì — chỉ mở tệp:
 
 ```bash
-# Windows/macOS/Linux: nhấp đúp element-fish.html, hoặc:
-python3 -m http.server 8000     # rồi mở http://localhost:8000/element-fish.html
+# Windows/macOS/Linux: nhấp đúp index.html, hoặc:
+python3 -m http.server 8000     # rồi mở http://localhost:8000/
 ```
 
 > Trang dùng Tailwind qua CDN khi có mạng; mọi logic dữ liệu đều chạy cục bộ.
@@ -46,7 +46,7 @@ Sau **mỗi** thay đổi, chụp lại màn hình để so sánh trực quan b�
 ```bash
 # Chrome/Edge headless (không cần mở cửa sổ trình duyệt):
 chrome --headless=new --screenshot=shots/vuon-ket-qua.png --window-size=1440,1200 \
-       "file://$(pwd)/element-fish.html"
+       "file://$(pwd)/index.html"
 
 # Vòng lặp gợi ý: sửa → chụp → xem bảng so sánh → chốt
 ```
@@ -71,7 +71,7 @@ git commit -m "feat: mô tả ngắn gọn thay đổi"   # feat: / fix: / docs:
 git tag v0.x.y                                  # đánh dấu phiên bản chạy tốt
 ```
 
-Nếu hỏng nặng: `git checkout v0.x.y -- element-fish.html` để quay lại bản tốt cuối.
+Nếu hỏng nặng: `git checkout v0.x.y -- index.html` để quay lại bản tốt cuối.
 
 ---
 
@@ -111,7 +111,7 @@ Vercel tự deploy lại mỗi lần `git push` lên `main`. Tùy đổi tên mi
 
 ```
 .
-├── element-fish.html        # toàn bộ ứng dụng (HTML + CSS + JS)
+├── index.html        # toàn bộ ứng dụng (HTML + CSS + JS)
 ├── scripts/
 │   └── test_elements.py     # kiểm thử dữ liệu trước mỗi commit
 ├── shots/                   # ảnh chụp màn hình kiểm thử (bỏ qua trong Git)

@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent / "element-fish.html"
+SRC = Path(__file__).resolve().parent.parent / "index.html"
 problems = []
 passed = []
 
